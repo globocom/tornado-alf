@@ -8,11 +8,13 @@ from tornadoalf.manager import TokenManager
 
 class Client(AsyncHTTPClient):
 
+    token_manager_class = TokenManager
+
     def __new__(cls, *args, **kwargs):
         client_id = kwargs.pop('client_id')
         client_secret = kwargs.pop('client_secret')
         token_endpoint = kwargs.pop('token_endpoint')
-        instance = super(Client, cls).__new__(*args, **kwargs)
+        instance = super(Client, cls).__new__(cls, *args, **kwargs)
         instance.set_client_access(client_id, client_secret, token_endpoint)
         return instance
 
@@ -25,6 +27,6 @@ class Client(AsyncHTTPClient):
     @gen.coroutine
     def fetch(self, request, callback=None, **kwargs):
         access_token = yield self._token_manager.get_token()
-        kwargs['auth'] = BearerTokenAuth(access_token)
+        request.headers['Authorization'] = 'Bearer {}'.format(access_token)
         result = yield gen.Task(super(Client, self).fetch, request, callback, **kwargs)
         raise gen.Return(result)

@@ -1,125 +1,127 @@
 # -*- coding: utf-8 -*-
 
-# from mock import patch, Mock
-# from unittest import TestCase
+from mock import patch, Mock
+from unittest import TestCase
+from . import mkfuture
+from tornado.testing import AsyncTestCase, gen_test
+from tornadoalf.manager import TokenManager
+from tornadoalf.client import Client
 
-# from tornadoalf.managers import TokenManager
-# from tornadoalf.client import Client, BearerTokenAuth
 
+class TestClient(AsyncTestCase):
 
-# class TestClient(TestCase):
+    end_point = 'http://endpoint/token'
+    resource_url = 'http://api/some/resource'
 
-#     end_point = 'http://endpoint/token'
-#     resource_url = 'http://api/some/resource'
+    def test_Client_should_have_a_variable_with_a_token_manager_class(self):
+        self.assertEquals(Client.token_manager_class, TokenManager)
 
-#     def test_Client_should_have_a_variable_with_a_token_manager_class(self):
-#         self.assertEquals(Client.token_manager_class, TokenManager)
+    def test_token_manager_object_should_be_an_instance_of_token_manager_class(self):
+        client = Client(token_endpoint=self.end_point, client_id='client-id', client_secret='client_secret')
 
-#     def test_token_manager_object_should_be_an_instance_of_token_manager_class(self):
-#         client = Client(token_endpoint=self.end_point, client_id='client-id', client_secret='client_secret')
+        self.assertTrue(isinstance(client._token_manager, client.token_manager_class))
 
-#         self.assertTrue(isinstance(client._token_manager, client.token_manager_class))
+    # @patch('tornadoalf.client.TokenManager')
+    # def test_should_retry_a_bad_request_once(self, Manager):
+    #     request.return_value = Mock(status_code=401)
+    #     self._fake_manager(Manager, has_token=False)
 
-#     @patch('alf.client.TokenManager')
-#     @patch('requests.Session.request')
-#     def test_should_retry_a_bad_request_once(self, request, Manager):
-#         request.return_value = Mock(status_code=401)
-#         self._fake_manager(Manager, has_token=False)
+    #     self._request(Manager)
 
-#         self._request(Manager)
+    #     self.assertEqual(request.call_count, 2)
 
-#         self.assertEqual(request.call_count, 2)
+    # @patch('requests.post')
+    # @patch('requests.Session.request')
+    # def test_should_stop_the_request_when_token_fails(self, request, post):
+    #     post.return_value = Mock(status_code=500, ok=False)
 
-#     @patch('requests.post')
-#     @patch('requests.Session.request')
-#     def test_should_stop_the_request_when_token_fails(self, request, post):
-#         post.return_value = Mock(status_code=500, ok=False)
+    #     client = Client(
+    #         token_endpoint=self.end_point,
+    #         client_id='client_id',
+    #         client_secret='client_secret'
+    #     )
 
-#         client = Client(
-#             token_endpoint=self.end_point,
-#             client_id='client_id',
-#             client_secret='client_secret'
-#         )
+    #     response = client.request('GET', self.resource_url)
 
-#         response = client.request('GET', self.resource_url)
+    #     self.assertEqual(response.status_code, 500)
 
-#         self.assertEqual(response.status_code, 500)
+    # @patch('alf.client.TokenManager.reset_token')
+    # @patch('requests.post')
+    # @patch('requests.Session.request')
+    # def test_should_reset_token_when_token_fails(self, request, post, reset_token):
+    #     post.return_value = Mock(status_code=500, ok=False)
 
-#     @patch('alf.client.TokenManager.reset_token')
-#     @patch('requests.post')
-#     @patch('requests.Session.request')
-#     def test_should_reset_token_when_token_fails(self, request, post, reset_token):
-#         post.return_value = Mock(status_code=500, ok=False)
+    #     client = Client(
+    #         token_endpoint=self.end_point,
+    #         client_id='client_id',
+    #         client_secret='client_secret'
+    #     )
 
-#         client = Client(
-#             token_endpoint=self.end_point,
-#             client_id='client_id',
-#             client_secret='client_secret'
-#         )
+    #     response = client.request('GET', self.resource_url)
 
-#         response = client.request('GET', self.resource_url)
+    #     self.assertTrue(reset_token.called)
 
-#         self.assertTrue(reset_token.called)
+    #     self.assertEqual(response.status_code, 500)
 
-#         self.assertEqual(response.status_code, 500)
+    # @patch('alf.client.TokenManager._has_token')
+    # @patch('alf.client.TokenManager.reset_token')
+    # @patch('requests.Session.request')
+    # def test_should_reset_token_when_gets_an_unauthorized_error(self, request, reset_token, _has_token):
+    #     request.return_value = Mock(status_code=401)
+    #     _has_token.return_value = True
 
-#     @patch('alf.client.TokenManager._has_token')
-#     @patch('alf.client.TokenManager.reset_token')
-#     @patch('requests.Session.request')
-#     def test_should_reset_token_when_gets_an_unauthorized_error(self, request, reset_token, _has_token):
-#         request.return_value = Mock(status_code=401)
-#         _has_token.return_value = True
+    #     client = Client(
+    #         token_endpoint=self.end_point,
+    #         client_id='client_id',
+    #         client_secret='client_secret'
+    #     )
 
-#         client = Client(
-#             token_endpoint=self.end_point,
-#             client_id='client_id',
-#             client_secret='client_secret'
-#         )
+    #     response = client.request('GET', self.resource_url)
 
-#         response = client.request('GET', self.resource_url)
+    #     self.assertTrue(reset_token.called)
 
-#         self.assertTrue(reset_token.called)
+    #     self.assertEqual(response.status_code, 401)
 
-#         self.assertEqual(response.status_code, 401)
+    # @patch('requests.Session.request')
+    # def assertRequestsResource(self, Manager, access_token, status_code, request):
+    #     request.return_value = Mock(status_code=status_code)
+    #     self._request(Manager)
 
-#     @patch('requests.Session.request')
-#     def assertRequestsResource(self, Manager, access_token, status_code, request):
-#         request.return_value = Mock(status_code=status_code)
-#         self._request(Manager)
+    #     self.assertTrue(request.called)
+    #     self.assertResourceWasRequested(request.call_args, access_token=access_token)
 
-#         self.assertTrue(request.called)
-#         self.assertResourceWasRequested(request.call_args, access_token=access_token)
+    # def assertResourceWasRequested(self, call, access_token):
+    #     args, kwargs = call
+    #     self.assertEqual(args, ('GET', self.resource_url))
 
-#     def assertResourceWasRequested(self, call, access_token):
-#         args, kwargs = call
-#         self.assertEqual(args, ('GET', self.resource_url))
+    #     auth = kwargs['auth']
+    #     self.assertIsInstance(auth, BearerTokenAuth)
+    #     self.assertEqual(auth._access_token, access_token)
 
-#         auth = kwargs['auth']
-#         self.assertIsInstance(auth, BearerTokenAuth)
-#         self.assertEqual(auth._access_token, access_token)
+    # @gen.coroutine
+    # def _request(self, manager):
+    #     class ClientTest(Client):
+    #         token_manager_class = manager
 
-#     def _request(self, manager):
-#         class ClientTest(Client):
-#             token_manager_class = manager
+    #     client = ClientTest(
+    #         token_endpoint=self.end_point,
+    #         client_id='client_id',
+    #         client_secret='client_secret')
 
-#         client = ClientTest(
-#             token_endpoint=self.end_point,
-#             client_id='client_id',
-#             client_secret='client_secret')
+    #     result = yield client.fetch('GET', self.resource_url)
+    #     raise gen.Return(result)
 
-#         return client.request('GET', self.resource_url)
+    # def _fake_manager(self, Manager, has_token=True, access_token='', status_code=200):
+    #     if not isinstance(access_token, list):
+    #         access_token = [access_token]
 
-#     def _fake_manager(self, Manager, has_token=True, access_token='', status_code=200):
-#         if not isinstance(access_token, list):
-#             access_token = [access_token]
+    #     access_token.reverse()
 
-#         access_token.reverse()
+    #     manager = Mock()
+    #     manager._has_token.return_value = has_token
+    #     manager.get_token.return_value = access_token[0]
+    #     manager.request_token.return_value = mkfuture(Mock(
+    #         status_code=status_code, error=(status_code == 200 and None or Exception('error'))))
+    #     Manager.return_value = manager
 
-#         manager = Mock()
-#         manager._has_token.return_value = has_token
-#         manager.get_token.return_value = access_token[0]
-#         manager.request_token.return_value = Mock(
-#             status_code=status_code, ok=(status_code == 200))
-#         Manager.return_value = manager
-
-#         return manager
+    #     return manager
