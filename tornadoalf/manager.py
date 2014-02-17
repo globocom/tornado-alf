@@ -1,0 +1,78 @@
+# -*- coding: utf-8 -*-
+from urllib import urlencode
+from tornadoalf.token import Token, TokenError
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+from tornado import gen
+try:
+    from simplejson import json
+except ImportError:
+    import json
+
+
+class TokenManager(object):
+
+    def __init__(self, token_endpoint, client_id, client_secret):
+        self._token_endpoint = token_endpoint
+        self._client_id = client_id
+        self._client_secret = client_secret
+        self._token = Token()
+        self._http_client = AsyncHTTPClient()
+
+    def _has_token(self):
+        return self._token.is_valid()
+
+    @gen.coroutine
+    def get_token(self):
+        if not self._has_token():
+            yield self._update_token()
+        raise gen.Return(self._token.access_token)
+
+    @gen.coroutine
+    def _get_token_data(self):
+        token_data = yield self._request_token()
+        raise gen.Return(token_data)
+
+    def reset_token(self):
+        self._token = Token()
+
+    @gen.coroutine
+    def _update_token(self):
+        token_data = yield self._get_token_data()
+        self._token = Token(token_data.get('access_token', ''),
+                            token_data.get('expires_in', 0))
+
+    @gen.coroutine
+    def _request_token(self):
+        token_data = yield self._fetch(
+            url=self._token_endpoint,
+            method="POST",
+            auth=(self._client_id, self._client_secret),
+            data={'grant_type': 'client_credentials'}
+        )
+
+
+        raise gen.Return(token_data)
+
+    @gen.coroutine
+    def _fetch(self, url, method="GET", data=None, auth=None):
+        if type(data) == dict:
+            data = urlencode()
+
+        request_data = dict(
+            url=url,
+            method=method,
+            body=data
+        )
+
+        if auth is not None:
+            request_data.update(dict(
+                auth_username=auth[0],
+                auth_password=auth[1]
+            ))
+
+        request = HTTPRequest(**request_data)
+        response = yield _http_client.fetch(request)
+        if response.error:
+            raise TokenError('Failed to request token', response)
+        result = json.loads(response.body)
+        raise gen.Return(result)
