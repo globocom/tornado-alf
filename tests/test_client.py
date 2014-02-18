@@ -3,6 +3,8 @@
 from mock import patch, Mock
 from unittest import TestCase
 from . import mkfuture
+
+from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 from tornadoalf.manager import TokenManager
 from tornadoalf.client import Client
@@ -21,107 +23,87 @@ class TestClient(AsyncTestCase):
 
         self.assertTrue(isinstance(client._token_manager, client.token_manager_class))
 
-    # @patch('tornadoalf.client.TokenManager')
-    # def test_should_retry_a_bad_request_once(self, Manager):
-    #     request.return_value = Mock(status_code=401)
-    #     self._fake_manager(Manager, has_token=False)
+    @patch('tornadoalf.client.TokenManager')
+    @patch('tornadoalf.client.Client._authorized_fetch')
+    def test_should_retry_a_bad_request_once(self, Manager, f_fetch):
+        f_fetch.return_value = mkfuture(Mock(code=401))
+        self._fake_manager(Manager, has_token=False)
 
-    #     self._request(Manager)
+        yield self._request(Manager)
 
-    #     self.assertEqual(request.call_count, 2)
+        self.assertEqual(request.call_count, 2)
 
-    # @patch('requests.post')
-    # @patch('requests.Session.request')
-    # def test_should_stop_the_request_when_token_fails(self, request, post):
-    #     post.return_value = Mock(status_code=500, ok=False)
+    @patch('tornadoalf.client.Client._authorized_fetch')
+    def test_should_stop_the_request_when_token_fails(self, f_fetch):
+        f_fetch.return_value = mkfuture(Mock(code=500, error=Exception('fail')))
 
-    #     client = Client(
-    #         token_endpoint=self.end_point,
-    #         client_id='client_id',
-    #         client_secret='client_secret'
-    #     )
+        client = Client(
+            token_endpoint=self.end_point,
+            client_id='client_id',
+            client_secret='client_secret'
+        )
 
-    #     response = client.request('GET', self.resource_url)
+        response = yield client.fetch(self.resource_url, method="GET")
 
-    #     self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.code, 500)
 
-    # @patch('alf.client.TokenManager.reset_token')
-    # @patch('requests.post')
-    # @patch('requests.Session.request')
-    # def test_should_reset_token_when_token_fails(self, request, post, reset_token):
-    #     post.return_value = Mock(status_code=500, ok=False)
+    @patch('tornadoalf.client.Client._authorized_fetch')
+    @patch('tornadoalf.client.TokenManager.reset_token')
+    def test_should_reset_token_when_token_fails(self, reset_token, _authorized_fetch):
+        _authorized_fetch.return_value = mkfuture(Mock(code=500, error=Exception('fail')))
 
-    #     client = Client(
-    #         token_endpoint=self.end_point,
-    #         client_id='client_id',
-    #         client_secret='client_secret'
-    #     )
+        client = Client(
+            token_endpoint=self.end_point,
+            client_id='client_id',
+            client_secret='client_secret'
+        )
 
-    #     response = client.request('GET', self.resource_url)
+        response = yield client.fetch(self.resource_url, method="GET")
+        self.assertTrue(reset_token.called)
+        self.assertEqual(response.status_code, 500)
 
-    #     self.assertTrue(reset_token.called)
+    @patch('tornadoalf.client.TokenManager._has_token')
+    @patch('tornadoalf.client.TokenManager.reset_token')
+    @patch('tornadoalf.client.Client._authorized_fetch')
+    def test_should_reset_token_when_gets_an_unauthorized_error(self, _authorized_fetch, reset_token, _has_token):
+        _authorized_fetch.return_value = mkfuture(Mock(code=401))
+        _has_token.return_value = True
 
-    #     self.assertEqual(response.status_code, 500)
+        client = Client(
+            token_endpoint=self.end_point,
+            client_id='client_id',
+            client_secret='client_secret'
+        )
 
-    # @patch('alf.client.TokenManager._has_token')
-    # @patch('alf.client.TokenManager.reset_token')
-    # @patch('requests.Session.request')
-    # def test_should_reset_token_when_gets_an_unauthorized_error(self, request, reset_token, _has_token):
-    #     request.return_value = Mock(status_code=401)
-    #     _has_token.return_value = True
+        response = yield client.fetch(self.resource_url, method="GET")
 
-    #     client = Client(
-    #         token_endpoint=self.end_point,
-    #         client_id='client_id',
-    #         client_secret='client_secret'
-    #     )
+        self.assertTrue(reset_token.called)
+        self.assertEqual(response.code, 401)
 
-    #     response = client.request('GET', self.resource_url)
+    @gen.coroutine
+    def _request(self, manager):
+        class ClientTest(Client):
+            token_manager_class = manager
 
-    #     self.assertTrue(reset_token.called)
+        client = ClientTest(
+            token_endpoint=self.end_point,
+            client_id='client_id',
+            client_secret='client_secret')
 
-    #     self.assertEqual(response.status_code, 401)
+        result = yield client.fetch('GET', self.resource_url)
+        raise gen.Return(result)
 
-    # @patch('requests.Session.request')
-    # def assertRequestsResource(self, Manager, access_token, status_code, request):
-    #     request.return_value = Mock(status_code=status_code)
-    #     self._request(Manager)
+    def _fake_manager(self, Manager, has_token=True, access_token='', code=200):
+        if not isinstance(access_token, list):
+            access_token = [access_token]
 
-    #     self.assertTrue(request.called)
-    #     self.assertResourceWasRequested(request.call_args, access_token=access_token)
+        access_token.reverse()
 
-    # def assertResourceWasRequested(self, call, access_token):
-    #     args, kwargs = call
-    #     self.assertEqual(args, ('GET', self.resource_url))
+        manager = Mock()
+        manager._has_token.return_value = has_token
+        manager.get_token.return_value = mkfuture(access_token[0])
+        manager.request_token.return_value = mkfuture(Mock(
+            status_code=status_code, error=(code == 200 and None or Exception('error'))))
+        Manager.return_value = manager
 
-    #     auth = kwargs['auth']
-    #     self.assertIsInstance(auth, BearerTokenAuth)
-    #     self.assertEqual(auth._access_token, access_token)
-
-    # @gen.coroutine
-    # def _request(self, manager):
-    #     class ClientTest(Client):
-    #         token_manager_class = manager
-
-    #     client = ClientTest(
-    #         token_endpoint=self.end_point,
-    #         client_id='client_id',
-    #         client_secret='client_secret')
-
-    #     result = yield client.fetch('GET', self.resource_url)
-    #     raise gen.Return(result)
-
-    # def _fake_manager(self, Manager, has_token=True, access_token='', status_code=200):
-    #     if not isinstance(access_token, list):
-    #         access_token = [access_token]
-
-    #     access_token.reverse()
-
-    #     manager = Mock()
-    #     manager._has_token.return_value = has_token
-    #     manager.get_token.return_value = access_token[0]
-    #     manager.request_token.return_value = mkfuture(Mock(
-    #         status_code=status_code, error=(status_code == 200 and None or Exception('error'))))
-    #     Manager.return_value = manager
-
-    #     return manager
+        return manager

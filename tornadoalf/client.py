@@ -6,6 +6,9 @@ from tornado import gen
 from tornadoalf.manager import TokenManager
 
 
+BAD_TOKEN = 401
+
+
 class Client(AsyncHTTPClient):
 
     token_manager_class = TokenManager
@@ -26,7 +29,22 @@ class Client(AsyncHTTPClient):
 
     @gen.coroutine
     def fetch(self, request, callback=None, **kwargs):
+        try:
+            response = yield self._authorized_fetch(request, callback, **kwargs)
+            if response.code != BAD_TOKEN:
+                raise gen.Return(response)
+
+            self._token_manager.reset_token()
+            response = yield self._authorized_fetch(request, callback, **kwargs)
+            raise gen.Return(response)
+
+        except TokenError:
+            self._token_manager.reset_token()
+            raise
+
+    @gen.coroutine
+    def _authorized_fetch(self, request, callback, **kwargs):
         access_token = yield self._token_manager.get_token()
         request.headers['Authorization'] = 'Bearer {}'.format(access_token)
-        result = yield gen.Task(super(Client, self).fetch, request, callback, **kwargs)
+        result = yield super(Client, self).fetch(request, callback, **kwargs)
         raise gen.Return(result)
