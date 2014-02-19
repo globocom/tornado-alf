@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+from base64 import b64encode
 from urllib import urlencode
 from tornadoalf.token import Token, TokenError
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 from tornado import gen
 try:
     from simplejson import json
@@ -56,23 +57,26 @@ class TokenManager(object):
     @gen.coroutine
     def _fetch(self, url, method="GET", data=None, auth=None):
         if type(data) == dict:
-            data = urlencode()
+            data = urlencode(data)
 
         request_data = dict(
             url=url,
+            # headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            headers={},
             method=method,
             body=data
         )
 
         if auth is not None:
-            request_data.update(dict(
-                auth_username=auth[0],
-                auth_password=auth[1]
-            ))
+            passhash = b64encode(':'.join(auth))
+            request_data['headers']['Authorization'] = 'Basic %s' % passhash
 
         request = HTTPRequest(**request_data)
-        response = yield _http_client.fetch(request)
-        if response.error:
-            raise TokenError('Failed to request token', response)
+        print "request:%s %s\n%s\n%s" % (request.method, request.url, request.headers, request.body)
+        try:
+            response = yield self._http_client.fetch(request)
+        except HTTPError, e:
+            import ipdb;ipdb.set_trace()
+            raise TokenError('Failed to request token', e)
         result = json.loads(response.body)
         raise gen.Return(result)
