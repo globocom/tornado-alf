@@ -1,13 +1,10 @@
-alf
+tornado-alf
 ===
 
-Python OAuth 2 Client
+Tornado OAuth 2 Client
 ---------------------
 
-`alf` is a OAuth 2 Client based on `requests.Session
-<http://docs.python-requests.org/en/latest/user/advanced/#session-objects>`_
-with seamless support for the `Client Credentials Flow
-<http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-1.3.4>`_.
+`tornado-alf` is a OAuth 2 Client base on the tornado's AsyncHTTPClient
 
 Features
 --------
@@ -19,28 +16,22 @@ Features
 Usage
 -----
 
-Initialize the client and use it as a `requests.Session
-<http://docs.python-requests.org/en/latest/user/advanced/#session-objects>`_
-object.
+Initialize the client and use it as a AsyncHTTPClient object.
 
 .. code-block:: python
 
-    from alf.client import Client
+    from tornadoalf.client import Client
 
-    alf = Client(
+    client = Client(
         token_endpoint='http://example.com/token',
         client_id='client-id',
         client_secret='secret')
 
     resource_uri = 'http://example.com/resource'
 
-    alf.put(
-        resource_uri, data='{"name": "alf"}',
+    response = yield client.fetch(resource_uri,
+        method='POST', data='{"name": "alf"}',
         headers={'Content-Type': 'application/json'})
-
-    alf.get(resource_uri)
-
-    alf.delete(resource_uri)
 
 
 How it works?
@@ -76,8 +67,6 @@ the real request won't happen.
 Related projects
 ----------------
 
-`djalf <https://github.com/viniciuschagas/djalf>`_
+This project tries to be an adaptaion to tornado of
+`alf <https://github.com/globocom/alf>`_
 ''''''''''''''''''''''''''''''''''''''''''''''''''
-
-Extended client that uses Django's cache backend to share tokens between
-server instances.
