@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tornado-alf',
-    version='0.1',
+    version='0.2',
     description="OAuth Client For Tornado",
     long_description=open('README.rst').read(),
     keywords='oauth client client_credentials tornado',
