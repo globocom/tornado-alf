@@ -76,7 +76,6 @@ class TokenManager(object):
         try:
             response = yield self._http_client.fetch(request)
         except HTTPError, e:
-            import ipdb;ipdb.set_trace()
             raise TokenError('Failed to request token', e)
         result = json.loads(response.body)
         raise gen.Return(result)
