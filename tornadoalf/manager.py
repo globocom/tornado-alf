@@ -51,7 +51,6 @@ class TokenManager(object):
             data={'grant_type': 'client_credentials'}
         )
 
-
         raise gen.Return(token_data)
 
     @gen.coroutine

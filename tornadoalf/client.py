@@ -5,6 +5,8 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 from tornadoalf.manager import TokenManager, TokenError
 
+import logging
+
 
 BAD_TOKEN = 401
 
@@ -39,6 +41,8 @@ class Client(object):
     def _authorized_fetch(self, request, callback, **kwargs):
         access_token = yield self._token_manager.get_token()
         request.headers['Authorization'] = 'Bearer {}'.format(access_token)
-        print "alf request:%s %s\n%s\n%s" % (request.method, request.url, request.headers, request.body)
+
+        logging.info('alf request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
+
         result = yield self._http_client.fetch(request, callback, **kwargs)
         raise gen.Return(result)
