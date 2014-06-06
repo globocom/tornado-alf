@@ -61,14 +61,16 @@ class TokenManager(object):
 
         request_data = dict(
             url=url,
-            # headers={'Content-Type': 'application/x-www-form-urlencoded'},
             headers={},
             method=method,
             body=data
         )
 
         if auth is not None:
-            passhash = b64encode(':'.join(auth))
+            try:
+                passhash = b64encode(':'.join(auth))
+            except TypeError, e:
+                raise TokenError('Missing credentials (client_id:client_secret)', e.message)
             request_data['headers']['Authorization'] = 'Basic %s' % passhash
 
         request = HTTPRequest(**request_data)
