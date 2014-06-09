@@ -2,6 +2,14 @@
 
 from setuptools import setup, find_packages
 
+tests_require = [
+    'mock',
+    'nose',
+    'coverage',
+    'yanc',
+    'ipdb',
+]
+
 setup(
     name='tornado-alf',
     version='0.2',
@@ -22,4 +30,7 @@ setup(
     install_requires=[
         'tornado>=3.0',
     ],
+    extras_require={
+        'tests': tests_require,
+    },
 )

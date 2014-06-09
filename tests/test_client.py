@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import sys
+
 from mock import patch, Mock
-from unittest import TestCase
 from . import mkfuture
 
 from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
-from tornadoalf.manager import TokenManager
+from tornadoalf.manager import TokenManager, TokenError
 from tornadoalf.client import Client
 
 
@@ -23,62 +24,72 @@ class TestClient(AsyncTestCase):
 
         self.assertTrue(isinstance(client._token_manager, client.token_manager_class))
 
+    @gen_test
     @patch('tornadoalf.client.TokenManager')
-    @patch('tornadoalf.client.Client._authorized_fetch')
-    def test_should_retry_a_bad_request_once(self, Manager, f_fetch):
-        f_fetch.return_value = mkfuture(Mock(code=401))
+    def test_should_return_a_good_request(self, Manager):
+        manager = self._fake_manager(Manager, has_token=False)
+
+        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:
+            _authorized_fetch.return_value = mkfuture(Mock(code=200))
+
+            response = yield self._request(Manager)
+            self.assertEqual(response.code, 200)
+            self.assertEqual(_authorized_fetch.call_count, 1)
+            self.assertEqual(manager.reset_token.call_count, 0)
+
+    @gen_test
+    @patch('tornadoalf.client.TokenManager')
+    def test_should_return_a_bad_request(self, Manager):
+        manager = self._fake_manager(Manager, has_token=False)
+
+        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:
+            _authorized_fetch.return_value = mkfuture(Mock(code=400))
+
+            response = yield self._request(Manager)
+            self.assertEqual(response.code, 400)
+            self.assertEqual(_authorized_fetch.call_count, 1)
+            self.assertEqual(manager.reset_token.call_count, 0)
+
+    @gen_test
+    @patch('tornadoalf.client.TokenManager')
+    def test_should_retry_a_bad_token_request_once(self, Manager):
         self._fake_manager(Manager, has_token=False)
 
-        yield self._request(Manager)
+        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:
+            _authorized_fetch.return_value = mkfuture(Mock(code=401))
 
-        self.assertEqual(request.call_count, 2)
+            response = yield self._request(Manager)
+            self.assertEqual(response.code, 401)
+            self.assertEqual(_authorized_fetch.call_count, 2)
 
-    @patch('tornadoalf.client.Client._authorized_fetch')
-    def test_should_stop_the_request_when_token_fails(self, f_fetch):
-        f_fetch.return_value = mkfuture(Mock(code=500, error=Exception('fail')))
+    @gen_test
+    @patch('tornadoalf.client.TokenManager')
+    def test_should_reset_token_when_token_fails(self, Manager):
+        manager = self._fake_manager(Manager, has_token=False)
 
-        client = Client(
-            token_endpoint=self.end_point,
-            client_id='client_id',
-            client_secret='client_secret'
-        )
+        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:
+            _authorized_fetch.return_value = mkfuture(Mock(code=401))
 
-        response = yield client.fetch(self.resource_url, method="GET")
+            response = yield self._request(Manager)
+            self.assertEqual(response.code, 401)
+            self.assertEqual(manager.reset_token.call_count, 1)
 
-        self.assertEqual(response.code, 500)
+    @gen_test
+    @patch('tornadoalf.client.TokenManager')
+    def test_should_reset_token_when_gets_a_token_error(self, Manager):
+        manager = self._fake_manager(Manager, has_token=False)
 
-    @patch('tornadoalf.client.Client._authorized_fetch')
-    @patch('tornadoalf.client.TokenManager.reset_token')
-    def test_should_reset_token_when_token_fails(self, reset_token, _authorized_fetch):
-        _authorized_fetch.return_value = mkfuture(Mock(code=500, error=Exception('fail')))
+        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:
+            _authorized_fetch.side_effect = TokenError('boom', 'boom')
 
-        client = Client(
-            token_endpoint=self.end_point,
-            client_id='client_id',
-            client_secret='client_secret'
-        )
-
-        response = yield client.fetch(self.resource_url, method="GET")
-        self.assertTrue(reset_token.called)
-        self.assertEqual(response.status_code, 500)
-
-    @patch('tornadoalf.client.TokenManager._has_token')
-    @patch('tornadoalf.client.TokenManager.reset_token')
-    @patch('tornadoalf.client.Client._authorized_fetch')
-    def test_should_reset_token_when_gets_an_unauthorized_error(self, _authorized_fetch, reset_token, _has_token):
-        _authorized_fetch.return_value = mkfuture(Mock(code=401))
-        _has_token.return_value = True
-
-        client = Client(
-            token_endpoint=self.end_point,
-            client_id='client_id',
-            client_secret='client_secret'
-        )
-
-        response = yield client.fetch(self.resource_url, method="GET")
-
-        self.assertTrue(reset_token.called)
-        self.assertEqual(response.code, 401)
+            try:
+                yield self._request(Manager)
+            except TokenError, e:
+                self.assertEqual(e.message, 'boom')
+                self.assertEqual(_authorized_fetch.call_count, 1)
+                self.assertEqual(manager.reset_token.call_count, 1)
+            else:
+                assert False, 'Should not have got this far'
 
     @gen.coroutine
     def _request(self, manager):
@@ -90,7 +101,7 @@ class TestClient(AsyncTestCase):
             client_id='client_id',
             client_secret='client_secret')
 
-        result = yield client.fetch('GET', self.resource_url)
+        result = yield client.fetch(self.resource_url, method='GET')
         raise gen.Return(result)
 
     def _fake_manager(self, Manager, has_token=True, access_token='', code=200):
@@ -103,7 +114,10 @@ class TestClient(AsyncTestCase):
         manager._has_token.return_value = has_token
         manager.get_token.return_value = mkfuture(access_token[0])
         manager.request_token.return_value = mkfuture(Mock(
-            status_code=status_code, error=(code == 200 and None or Exception('error'))))
+            code=code,
+            error=(code == 200 and None or Exception('error'))
+        ))
+
         Manager.return_value = manager
 
         return manager

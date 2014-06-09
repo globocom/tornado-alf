@@ -7,7 +7,8 @@ clean:
 	@rm -rf *.egg-info dist
 
 test: clean
-	@nosetests -sd tests/
+	@coverage run --branch `which nosetests` -vv --with-yanc -s tests/
+	@coverage report -m --fail-under=80
 
 version:
 	@bin/new-version.sh
