@@ -42,7 +42,7 @@ class Client(object):
         access_token = yield self._token_manager.get_token()
         request.headers['Authorization'] = 'Bearer {}'.format(access_token)
 
-        logging.info('alf request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
+        logging.info('tornadoalf request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
 
         result = yield self._http_client.fetch(request, callback, **kwargs)
         raise gen.Return(result)
