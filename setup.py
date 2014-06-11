@@ -20,7 +20,17 @@ setup(
     author_email='entretenimento1@corp.globo.com',
     url='https://github.com/globocom/tornado-alf',
     license='Proprietary',
-    classifiers=['Intended Audience :: Developers'],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+        'Operating System :: MacOS',
+        'Operating System :: POSIX',
+        'Operating System :: Unix',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2.7',
+    ],
     packages=find_packages(
         exclude=(
             'tests',
