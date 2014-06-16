@@ -19,7 +19,7 @@ setup(
     author=u'Globo.com',
     author_email='entretenimento1@corp.globo.com',
     url='https://github.com/globocom/tornado-alf',
-    license='Proprietary',
+    license='MIT',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
