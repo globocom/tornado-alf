@@ -44,6 +44,9 @@ class TokenManager(object):
 
     @gen.coroutine
     def _request_token(self):
+        if not self._token_endpoint:
+            raise TokenError('Missing token endpoint')
+
         token_data = yield self._fetch(
             url=self._token_endpoint,
             method="POST",
