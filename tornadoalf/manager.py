@@ -9,6 +9,8 @@ try:
 except ImportError:
     import json
 
+import logging
+
 
 class TokenManager(object):
 
@@ -76,7 +78,7 @@ class TokenManager(object):
             request_data['headers']['Authorization'] = 'Basic %s' % passhash
 
         request = HTTPRequest(**request_data)
-        print "request:%s %s\n%s\n%s" % (request.method, request.url, request.headers, request.body)
+        logging.info('request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
         try:
             response = yield self._http_client.fetch(request)
         except HTTPError, e:
