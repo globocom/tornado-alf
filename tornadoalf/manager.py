@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from base64 import b64encode
-from urllib import urlencode
 from tornadoalf.token import Token, TokenError
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 from tornado import gen
@@ -8,6 +7,11 @@ try:
     from simplejson import json
 except ImportError:
     import json
+
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
 
 import logging
 
@@ -73,7 +77,7 @@ class TokenManager(object):
         if auth is not None:
             try:
                 passhash = b64encode(':'.join(auth))
-            except TypeError, e:
+            except TypeError as e:
                 raise TokenError('Missing credentials (client_id:client_secret)', e.message)
             request_data['headers']['Authorization'] = 'Basic %s' % passhash
 
@@ -81,7 +85,7 @@ class TokenManager(object):
         logging.info('request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
         try:
             response = yield self._http_client.fetch(request)
-        except HTTPError, e:
+        except HTTPError as e:
             raise TokenError('Failed to request token', e)
         result = json.loads(response.body)
         raise gen.Return(result)

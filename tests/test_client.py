@@ -84,8 +84,13 @@ class TestClient(AsyncTestCase):
 
             try:
                 yield self._request(Manager)
-            except TokenError, e:
-                self.assertEqual(e.message, 'boom')
+            except TokenError as e:
+                if hasattr(e, 'message'):
+                    self.assertEqual(e.message, 'boom')
+                elif hasattr(e, 'response'):
+                    self.assertEqual(e.response, 'boom')
+                else:
+                    assert False, 'Should not have got this far'
                 self.assertEqual(_authorized_fetch.call_count, 1)
                 self.assertEqual(manager.reset_token.call_count, 1)
             else:

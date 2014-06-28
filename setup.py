@@ -30,6 +30,7 @@ setup(
         'Operating System :: Unix',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
     ],
     packages=find_packages(
         exclude=(
