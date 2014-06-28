@@ -1,6 +1,6 @@
 
 setup:
-	@pip install -r requirements.txt
+	@pip install -U -e .\[tests\]
 
 clean:
 	@find . -iname '*.pyc' -delete
