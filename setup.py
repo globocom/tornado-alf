@@ -8,6 +8,7 @@ tests_require = [
     'coverage',
     'yanc',
     'ipdb',
+    'tox',
 ]
 
 setup(

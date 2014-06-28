@@ -8,7 +8,7 @@ clean:
 
 test: clean
 	@coverage run --branch `which nosetests` -vv --with-yanc -s tests/
-	@coverage report -m --fail-under=80
+	@coverage report -m --fail-under=73
 
 version:
 	@bin/new-version.sh
@@ -19,3 +19,5 @@ upload_release: clean
 
 release: version upload_release
 
+tox:
+	@tox
