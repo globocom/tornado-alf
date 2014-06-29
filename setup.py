@@ -13,7 +13,7 @@ tests_require = [
 
 setup(
     name='tornado-alf',
-    version='0.3.2',
+    version='0.3.3',
     description="OAuth Client For Tornado",
     long_description=open('README.rst').read(),
     keywords='oauth client client_credentials tornado',
