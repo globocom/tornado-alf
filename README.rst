@@ -1,4 +1,4 @@
-tornado-alf
+tornado-alf |build-status|
 ===========
 
 Tornado OAuth 2 Client
@@ -70,3 +70,6 @@ Related projects
 This project tries to be an adaptaion to tornado of
 `alf <https://github.com/globocom/alf>`_
 
+
+.. |build-status| image:: https://secure.travis-ci.org/globocom/tornado-alf.png?branch=travis-ci
+                  :target: https://travis-ci.org/globocom/tornado-alf
