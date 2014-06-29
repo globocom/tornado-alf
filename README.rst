@@ -71,5 +71,5 @@ This project tries to be an adaptaion to tornado of
 `alf <https://github.com/globocom/alf>`_
 
 
-.. |build-status| image:: https://secure.travis-ci.org/globocom/tornado-alf.png?branch=travis-ci
+.. |build-status| image:: https://secure.travis-ci.org/globocom/tornado-alf.png?branch=master
                   :target: https://travis-ci.org/globocom/tornado-alf
