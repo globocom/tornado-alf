@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import json
 from mock import patch, Mock
-from unittest import TestCase
 from . import mkfuture, mkfuture_exception
 from tornadoalf.manager import TokenManager, Token, TokenError
 from tornado.testing import AsyncTestCase, gen_test
@@ -14,7 +14,6 @@ class TestTokenManager(AsyncTestCase):
         self.end_point = 'http://endpoint/token'
         self.client_id = 'client_id'
         self.client_secret = 'client_secret'
-
         self.manager = TokenManager(self.end_point,
                                     self.client_id,
                                     self.client_secret)
@@ -102,3 +101,28 @@ class TestTokenManager(AsyncTestCase):
         self.manager.get_token()
 
         self.assertTrue(_update_token.called)
+
+
+class TestTokenManagerHTTP(AsyncTestCase):
+
+    def setUp(self):
+        super(TestTokenManagerHTTP, self).setUp()
+        self.end_point = 'http://endpoint/token'
+        self.client_id = 'client_id'
+        self.client_secret = 'client_secret'
+        self.http_options = {'request_timeout': 2}
+        self.manager = TokenManager(self.end_point,
+                                    self.client_id,
+                                    self.client_secret,
+                                    self.http_options)
+        self._fake_fetch = Mock()
+        self.manager._http_client.fetch = self._fake_fetch
+
+    @gen_test
+    def test_should_use_http_options(self):
+        fake_response = Mock(body=json.dumps(dict(access_token='access', expires_in=10)))
+        self._fake_fetch.return_value = mkfuture(fake_response)
+
+        yield self.manager._request_token()
+        request = self._fake_fetch.call_args[0][0]
+        assert request.request_timeout == 2

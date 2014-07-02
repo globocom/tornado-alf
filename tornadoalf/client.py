@@ -1,12 +1,10 @@
 #
 # encoding: utf-8
+import logging
 
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 from tornadoalf.manager import TokenManager, TokenError
-
-import logging
-
 
 BAD_TOKEN = 401
 
@@ -15,12 +13,14 @@ class Client(object):
 
     token_manager_class = TokenManager
 
-    def __init__(self, client_id, client_secret, token_endpoint):
+    def __init__(self, client_id, client_secret, token_endpoint, http_options=None):
+        http_options = http_options is None and {} or http_options
         self._http_client = AsyncHTTPClient()
         self._token_manager = self.token_manager_class(
             token_endpoint=token_endpoint,
             client_id=client_id,
-            client_secret=client_secret)
+            client_secret=client_secret,
+            http_options=http_options)
 
     @gen.coroutine
     def fetch(self, request, callback=None, **kwargs):

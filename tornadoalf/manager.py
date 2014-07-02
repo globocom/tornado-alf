@@ -18,11 +18,12 @@ import logging
 
 class TokenManager(object):
 
-    def __init__(self, token_endpoint, client_id, client_secret):
+    def __init__(self, token_endpoint, client_id, client_secret, http_options=None):
         self._token_endpoint = token_endpoint
         self._client_id = client_id
         self._client_secret = client_secret
         self._token = Token()
+        self._http_options = http_options is None and {} or http_options
         self._http_client = AsyncHTTPClient()
 
     def _has_token(self):
@@ -81,6 +82,7 @@ class TokenManager(object):
                 raise TokenError('Missing credentials (client_id:client_secret)', e.message)
             request_data['headers']['Authorization'] = 'Basic %s' % passhash
 
+        request_data.update(self._http_options)
         request = HTTPRequest(**request_data)
         logging.info('request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
         try:
