@@ -111,6 +111,24 @@ class TestTokenManagerHTTP(AsyncTestCase):
         self.client_id = 'client_id'
         self.client_secret = 'client_secret'
         self.http_options = {'request_timeout': 2}
+
+    @gen_test
+    def test_work_with_no_http_options(self):
+        self.manager = TokenManager(self.end_point,
+                                    self.client_id,
+                                    self.client_secret)
+        self._fake_fetch = Mock()
+        self.manager._http_client.fetch = self._fake_fetch
+
+        fake_response = Mock(body=json.dumps(dict(access_token='access', expires_in=10)))
+        self._fake_fetch.return_value = mkfuture(fake_response)
+
+        yield self.manager._request_token()
+        request = self._fake_fetch.call_args[0][0]
+        assert request.request_timeout is None
+
+    @gen_test
+    def test_should_use_http_options(self):
         self.manager = TokenManager(self.end_point,
                                     self.client_id,
                                     self.client_secret,
@@ -118,8 +136,6 @@ class TestTokenManagerHTTP(AsyncTestCase):
         self._fake_fetch = Mock()
         self.manager._http_client.fetch = self._fake_fetch
 
-    @gen_test
-    def test_should_use_http_options(self):
         fake_response = Mock(body=json.dumps(dict(access_token='access', expires_in=10)))
         self._fake_fetch.return_value = mkfuture(fake_response)
 

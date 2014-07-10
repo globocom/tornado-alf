@@ -23,7 +23,7 @@ class TokenManager(object):
         self._client_id = client_id
         self._client_secret = client_secret
         self._token = Token()
-        self._http_options = http_options is None and {} or http_options
+        self._http_options = http_options if http_options else {}
         self._http_client = AsyncHTTPClient()
 
     def _has_token(self):
