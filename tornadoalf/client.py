@@ -1,6 +1,5 @@
 #
 # encoding: utf-8
-import logging
 
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
@@ -41,8 +40,6 @@ class Client(object):
     def _authorized_fetch(self, request, callback, **kwargs):
         access_token = yield self._token_manager.get_token()
         request.headers['Authorization'] = 'Bearer {}'.format(access_token)
-
-        logging.info('tornadoalf request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
 
         result = yield self._http_client.fetch(request, callback, **kwargs)
         raise gen.Return(result)
