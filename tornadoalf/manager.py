@@ -80,7 +80,7 @@ class TokenManager(object):
                 passhash = b64encode(':'.join(auth).encode('ascii'))
             except TypeError as e:
                 raise TokenError('Missing credentials (client_id:client_secret)', str(e))
-            request_data['headers']['Authorization'] = 'Basic %s' % passhash
+            request_data['headers']['Authorization'] = 'Basic %s' % passhash.decode('utf-8')
 
         request_data.update(self._http_options)
         request = HTTPRequest(**request_data)
@@ -89,5 +89,6 @@ class TokenManager(object):
             response = yield self._http_client.fetch(request)
         except HTTPError as e:
             raise TokenError('Failed to request token', str(e))
-        result = json.loads(response.body)
+
+        result = json.loads(response.body.decode("utf-8"))
         raise gen.Return(result)
