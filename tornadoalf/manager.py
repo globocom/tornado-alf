@@ -84,7 +84,7 @@ class TokenManager(object):
 
         request_data.update(self._http_options)
         request = HTTPRequest(**request_data)
-        logging.info('request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
+        logging.debug('request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
         try:
             response = yield self._http_client.fetch(request)
         except HTTPError as e:
