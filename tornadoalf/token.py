@@ -10,6 +10,18 @@ class TokenError(Exception):
         self.response = response
 
 
+class TokenHTTPError(TokenError):
+
+    def __str__(self):
+        err = super(TokenError, self).__str__()
+
+        if self.response:
+            return '%s, StatusCode: %d, Body: %s' % (
+                err, self.response.code, self.response.body)
+
+        return err
+
+
 class Token(object):
 
     def __init__(self, access_token='', expires_in=0):

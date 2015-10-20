@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from base64 import b64encode
-from tornadoalf.token import Token, TokenError
+from tornadoalf.token import Token, TokenError, TokenHTTPError
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 from tornado import gen
 try:
@@ -88,7 +88,7 @@ class TokenManager(object):
         try:
             response = yield self._http_client.fetch(request)
         except HTTPError as e:
-            raise TokenError('Failed to request token', str(e))
+            raise TokenHTTPError('Failed to request token', e.response)
 
         result = json.loads(response.body.decode("utf-8"))
         raise gen.Return(result)
