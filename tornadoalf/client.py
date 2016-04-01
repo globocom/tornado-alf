@@ -28,7 +28,7 @@ class Client(object):
 
         # accepts request as string then convert it to HTTPRequest
         if isinstance(request, str):
-            request = HTTPRequest(request)
+            request = HTTPRequest(request, **kwargs)
 
         try:
             response = yield self._authorized_fetch(request,
