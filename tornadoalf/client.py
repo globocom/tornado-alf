@@ -2,7 +2,7 @@
 # encoding: utf-8
 import logging
 
-from tornado.httpclient import AsyncHTTPClient
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado import gen
 from tornadoalf.manager import TokenManager, TokenError
 
@@ -24,6 +24,11 @@ class Client(object):
 
     @gen.coroutine
     def fetch(self, request, callback=None, **kwargs):
+
+        # accepts request as string then convert it to HTTPRequest
+        if isinstance(request, str):
+            request = HTTPRequest(request)
+
         try:
             response = yield self._authorized_fetch(request, callback, **kwargs)
             if response.code != BAD_TOKEN:
