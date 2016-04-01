@@ -35,6 +35,17 @@ Initialize the client and use it as a AsyncHTTPClient object.
         headers={'Content-Type': 'application/json'})
 
 
+Alternatively one can pass directly a string to the fetch client
+
+.. code-block:: python
+
+    # ...
+    response = yield client.fetch('http://example.com/resource',
+        method='POST', body='{"name": "alf"}',
+        headers={'Content-Type': 'application/json'})
+
+
+
 How it works?
 -------------
 
