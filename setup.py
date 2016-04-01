@@ -9,6 +9,7 @@ tests_require = [
     'yanc',
     'ipdb',
     'tox',
+    'flake8',
 ]
 
 setup(

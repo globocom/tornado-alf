@@ -2,6 +2,7 @@
 setup:
 	@pip install -U -e .\[tests\]
 
+
 clean:
 	@find . -iname '*.pyc' -delete
 	@rm -rf *.egg-info dist
@@ -9,6 +10,7 @@ clean:
 test: clean
 	@coverage run --branch `which nosetests` -vv -s tests/
 	@coverage report -m --fail-under=73
+	@flake8 tornadoalf tests
 
 version:
 	@bin/new-version.sh

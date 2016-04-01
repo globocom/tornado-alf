@@ -9,6 +9,7 @@ def mkfuture(result):
     future.set_result(result)
     return future
 
+
 def mkfuture_exception(exception):
     future = Future()
     future.set_exception(exception)
