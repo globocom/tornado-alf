@@ -18,7 +18,9 @@ import logging
 
 class TokenManager(object):
 
-    def __init__(self, token_endpoint, client_id, client_secret, http_options=None):
+    def __init__(self, token_endpoint, client_id,
+                 client_secret, http_options=None):
+
         self._token_endpoint = token_endpoint
         self._client_id = client_id
         self._client_secret = client_secret
@@ -79,12 +81,20 @@ class TokenManager(object):
             try:
                 passhash = b64encode(':'.join(auth).encode('ascii'))
             except TypeError as e:
-                raise TokenError('Missing credentials (client_id:client_secret)', str(e))
-            request_data['headers']['Authorization'] = 'Basic %s' % passhash.decode('utf-8')
+                raise TokenError(
+                    'Missing credentials (client_id:client_secret)', str(e)
+                )
+
+            request_data['headers']['Authorization'] = (
+                'Basic %s' % passhash.decode('utf-8')
+            )
 
         request_data.update(self._http_options)
         request = HTTPRequest(**request_data)
-        logging.debug('request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
+        logging.debug('request:%s %s\n%s\n%s' % (
+            request.method, request.url, request.headers, request.body)
+        )
+
         try:
             response = yield self._http_client.fetch(request)
         except HTTPError as e:

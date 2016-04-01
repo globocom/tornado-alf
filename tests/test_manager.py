@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import json
 from mock import patch, Mock
 from . import mkfuture, mkfuture_exception
 from tornadoalf.manager import TokenManager, Token, TokenError
@@ -56,7 +55,9 @@ class TestTokenManager(AsyncTestCase):
     @gen_test
     def test_should_raise_token_error_for_bad_token(self):
         fake_response = Mock(error=Exception('fail'), status_code=500)
-        self._fake_fetch.return_value = mkfuture_exception(TokenError('error', fake_response))
+        self._fake_fetch.return_value = mkfuture_exception(
+            TokenError('error', fake_response)
+        )
 
         with self.assertRaises(TokenError) as context:
             yield self.manager._request_token()
@@ -66,7 +67,10 @@ class TestTokenManager(AsyncTestCase):
     @gen_test
     def test_get_token_data_should_obtain_new_token(self):
         _request_token = Mock()
-        _request_token.return_value = mkfuture({'access_token': 'new_access_token', 'expires_in': 10})
+        _request_token.return_value = mkfuture({
+            'access_token': 'new_access_token',
+            'expires_in': 10,
+        })
         self.manager._request_token = _request_token
         yield self.manager._get_token_data()
 
@@ -75,7 +79,10 @@ class TestTokenManager(AsyncTestCase):
     @gen_test
     def test_update_token_should_set_a_token_with_data_retrieved(self):
         _request_token = Mock()
-        _request_token.return_value = mkfuture({'access_token': 'new_access_token', 'expires_in': 10})
+        _request_token.return_value = mkfuture({
+            'access_token': 'new_access_token',
+            'expires_in': 10,
+        })
         self.manager._request_token = _request_token
         self.manager._token = Token('access_token', expires_in=100)
 
@@ -95,7 +102,9 @@ class TestTokenManager(AsyncTestCase):
     @gen_test
     @patch('tornadoalf.manager.TokenManager._update_token')
     @patch('tornadoalf.manager.TokenManager._has_token')
-    def test_get_token_should_request_a_new_token_if_do_not_have_a_token(self, _has_token, _update_token):
+    def test_get_token_should_request_a_new_token_if_do_not_have_a_token(
+            self, _has_token, _update_token):
+
         _has_token.return_value = False
 
         self.manager.get_token()
@@ -143,4 +152,5 @@ class TestTokenManagerHTTP(AsyncTestCase):
         yield self.manager._request_token()
         request = self._fake_fetch.call_args[0][0]
         self.assertEqual(request.request_timeout, 2)
-        self.assertEqual(request.headers['Authorization'], 'Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ=')
+        self.assertEqual(request.headers['Authorization'],
+                         'Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ=')

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import sys
-
 from mock import patch, Mock
 from . import mkfuture
 
@@ -19,17 +17,20 @@ class TestClient(AsyncTestCase):
     def test_Client_should_have_a_variable_with_a_token_manager_class(self):
         self.assertEquals(Client.token_manager_class, TokenManager)
 
-    def test_token_manager_object_should_be_an_instance_of_token_manager_class(self):
-        client = Client(token_endpoint=self.end_point, client_id='client-id', client_secret='client_secret')
+    def test_token_manager_object_should_be_an_instance_of_token_manager_class(self):  # noqa = E501
+        client = Client(token_endpoint=self.end_point,
+                        client_id='client-id', client_secret='client_secret')
 
-        self.assertTrue(isinstance(client._token_manager, client.token_manager_class))
+        self.assertTrue(
+            isinstance(client._token_manager, client.token_manager_class)
+        )
 
     @gen_test
     @patch('tornadoalf.client.TokenManager')
     def test_should_return_a_good_request(self, Manager):
         manager = self._fake_manager(Manager, has_token=False)
 
-        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:
+        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:  # noqa = E501
             _authorized_fetch.return_value = mkfuture(Mock(code=200))
 
             response = yield self._request(Manager)
@@ -42,7 +43,7 @@ class TestClient(AsyncTestCase):
     def test_should_return_a_bad_request(self, Manager):
         manager = self._fake_manager(Manager, has_token=False)
 
-        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:
+        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:  # noqa = E501
             _authorized_fetch.return_value = mkfuture(Mock(code=400))
 
             response = yield self._request(Manager)
@@ -55,7 +56,7 @@ class TestClient(AsyncTestCase):
     def test_should_retry_a_bad_token_request_once(self, Manager):
         self._fake_manager(Manager, has_token=False)
 
-        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:
+        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:  # noqa = E501
             _authorized_fetch.return_value = mkfuture(Mock(code=401))
 
             response = yield self._request(Manager)
@@ -67,7 +68,7 @@ class TestClient(AsyncTestCase):
     def test_should_reset_token_when_token_fails(self, Manager):
         manager = self._fake_manager(Manager, has_token=False)
 
-        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:
+        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:  # noqa = E501
             _authorized_fetch.return_value = mkfuture(Mock(code=401))
 
             response = yield self._request(Manager)
@@ -79,7 +80,7 @@ class TestClient(AsyncTestCase):
     def test_should_reset_token_when_gets_a_token_error(self, Manager):
         manager = self._fake_manager(Manager, has_token=False)
 
-        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:
+        with patch('tornadoalf.client.Client._authorized_fetch') as _authorized_fetch:  # noqa = E501
             _authorized_fetch.side_effect = TokenError('boom', 'boom')
 
             try:
@@ -109,7 +110,8 @@ class TestClient(AsyncTestCase):
         result = yield client.fetch(self.resource_url, method='GET')
         raise gen.Return(result)
 
-    def _fake_manager(self, Manager, has_token=True, access_token='', code=200):
+    def _fake_manager(self, Manager, has_token=True,
+                      access_token='', code=200):
         if not isinstance(access_token, list):
             access_token = [access_token]
 

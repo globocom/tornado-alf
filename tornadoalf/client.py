@@ -2,7 +2,7 @@
 # encoding: utf-8
 import logging
 
-from tornado.httpclient import AsyncHTTPClient
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado import gen
 from tornadoalf.manager import TokenManager, TokenError
 
@@ -13,7 +13,8 @@ class Client(object):
 
     token_manager_class = TokenManager
 
-    def __init__(self, client_id, client_secret, token_endpoint, http_options=None):
+    def __init__(self, client_id, client_secret,
+                 token_endpoint, http_options=None):
         http_options = http_options is None and {} or http_options
         self._http_client = AsyncHTTPClient()
         self._token_manager = self.token_manager_class(
@@ -24,13 +25,22 @@ class Client(object):
 
     @gen.coroutine
     def fetch(self, request, callback=None, **kwargs):
+
+        # accepts request as string then convert it to HTTPRequest
+        if isinstance(request, str):
+            request = HTTPRequest(request, **kwargs)
+
         try:
-            response = yield self._authorized_fetch(request, callback, **kwargs)
+            response = yield self._authorized_fetch(request,
+                                                    callback,
+                                                    **kwargs)
             if response.code != BAD_TOKEN:
                 raise gen.Return(response)
 
             self._token_manager.reset_token()
-            response = yield self._authorized_fetch(request, callback, **kwargs)
+            response = yield self._authorized_fetch(request,
+                                                    callback,
+                                                    **kwargs)
             raise gen.Return(response)
 
         except TokenError:
@@ -42,7 +52,9 @@ class Client(object):
         access_token = yield self._token_manager.get_token()
         request.headers['Authorization'] = 'Bearer {}'.format(access_token)
 
-        logging.debug('tornadoalf request:%s %s\n%s\n%s' % (request.method, request.url, request.headers, request.body))
+        logging.debug('tornadoalf request:%s %s\n%s\n%s' % (
+            request.method, request.url, request.headers, request.body
+        ))
 
         result = yield self._http_client.fetch(request, callback, **kwargs)
         raise gen.Return(result)

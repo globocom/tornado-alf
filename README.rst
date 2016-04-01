@@ -21,6 +21,7 @@ Initialize the client and use it as a AsyncHTTPClient object.
 .. code-block:: python
 
     from tornadoalf.client import Client
+    from tornadoalf.httpclient import HTTPRequest
 
     client = Client(
         token_endpoint='http://example.com/token',
@@ -29,9 +30,20 @@ Initialize the client and use it as a AsyncHTTPClient object.
 
     resource_uri = 'http://example.com/resource'
 
-    response = yield client.fetch(resource_uri,
+    response = yield client.fetch(HTTPRequest(resource_uri),
         method='POST', body='{"name": "alf"}',
         headers={'Content-Type': 'application/json'})
+
+
+Alternatively one can pass directly a string to the fetch client
+
+.. code-block:: python
+
+    # ...
+    response = yield client.fetch('http://example.com/resource',
+        method='POST', body='{"name": "alf"}',
+        headers={'Content-Type': 'application/json'})
+
 
 
 How it works?
