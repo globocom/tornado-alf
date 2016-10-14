@@ -49,7 +49,7 @@ Alternatively one can pass directly a string to the fetch client
 How it works?
 -------------
 
-Before any request the client tries to retrive a token on the endpoint,
+Before any request the client tries to retrieve a token on the endpoint,
 expecting a JSON response with the ``access_token`` and ``expires_in`` keys.
 
 The client keeps the token until it is expired, according to the ``expires_in``
@@ -79,7 +79,7 @@ the real request won't happen.
 Related projects
 ----------------
 
-This project tries to be an adaptaion to tornado of
+This project tries to be an adaptation to tornado of
 `alf <https://github.com/globocom/alf>`_
 
 
