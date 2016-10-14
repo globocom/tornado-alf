@@ -8,6 +8,8 @@ from tornadoalf.manager import TokenManager, TokenError
 
 BAD_TOKEN = 401
 
+logger = logging.getLogger(__name__)
+
 
 class Client(object):
 
@@ -52,9 +54,9 @@ class Client(object):
         access_token = yield self._token_manager.get_token()
         request.headers['Authorization'] = 'Bearer {}'.format(access_token)
 
-        logging.debug('tornadoalf request:%s %s\n%s\n%s' % (
-            request.method, request.url, request.headers, request.body
-        ))
+        logger.debug('Request: %s %s', request.method, request.url)
+        for header in request.headers:
+            logger.debug('Header %s: %s', header, request.headers[header])
 
         result = yield self._http_client.fetch(request, callback, **kwargs)
         raise gen.Return(result)

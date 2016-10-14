@@ -15,6 +15,8 @@ except ImportError:
 
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class TokenManager(object):
 
@@ -91,9 +93,10 @@ class TokenManager(object):
 
         request_data.update(self._http_options)
         request = HTTPRequest(**request_data)
-        logging.debug('request:%s %s\n%s\n%s' % (
-            request.method, request.url, request.headers, request.body)
-        )
+
+        logger.debug('Request: %s %s', request.method, request.url)
+        for header in request.headers:
+            logger.debug('Header %s: %s', header, request.headers[header])
 
         try:
             response = yield self._http_client.fetch(request)
