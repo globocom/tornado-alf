@@ -58,6 +58,8 @@ class TokenManager(object):
         if not self._token_endpoint:
             raise TokenError('Missing token endpoint')
 
+        logger.info('Requesting token for client id: %s', self._client_id)
+
         token_data = yield self._fetch(
             url=self._token_endpoint,
             method="POST",
@@ -100,8 +102,12 @@ class TokenManager(object):
 
         try:
             response = yield self._http_client.fetch(request)
-        except HTTPError as e:
-            raise TokenHTTPError('Failed to request token', e.response)
+        except HTTPError as http_err:
+            err = TokenHTTPError('Failed to request token', http_err.response)
+            logger.error(
+                'Could not request a token for client id: %s, error: %s',
+                self._client_id, err)
+            raise err
 
         result = json.loads(response.body.decode("utf-8"))
         raise gen.Return(result)
