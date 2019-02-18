@@ -45,9 +45,9 @@ class Client(object):
                                                     **kwargs)
             raise gen.Return(response)
 
-        except TokenError:
+        except TokenError as err:
             yield self._token_manager.reset_token()
-            raise
+            raise err
 
     @gen.coroutine
     def _authorized_fetch(self, request, callback, **kwargs):
