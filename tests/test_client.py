@@ -125,6 +125,7 @@ class TestClient(AsyncTestCase):
         manager = Mock()
         manager._has_token.return_value = has_token
         manager.get_token.return_value = mkfuture(access_token[0])
+        manager.reset_token.return_value = mkfuture(None)
         manager.request_token.return_value = mkfuture(Mock(
             code=code,
             error=(code == 200 and None or Exception('error'))

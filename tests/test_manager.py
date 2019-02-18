@@ -30,11 +30,16 @@ class TestTokenManager(AsyncTestCase):
         self.manager._token = Token('', expires_in=10)
         self.assertTrue(self.manager._has_token())
 
+    @gen_test
     def test_should_reset_token(self):
-        self.manager.reset_token()
+        self._fake_fetch.return_value = mkfuture({
+            'access_token': 'accesstoken',
+            'expires_in': 10,
+        })
+        yield self.manager.reset_token()
 
-        self.assertEqual(self.manager._token.access_token, '')
-        self.assertEqual(self.manager._token._expires_in, 0)
+        self.assertEqual(self.manager._token.access_token, 'accesstoken')
+        self.assertEqual(self.manager._token._expires_in, 10)
 
     @gen_test
     def test_should_be_able_to_request_a_new_token(self):

@@ -26,12 +26,12 @@ class TokenManager(object):
         self._token_endpoint = token_endpoint
         self._client_id = client_id
         self._client_secret = client_secret
-        self._token = Token()
+        self._token = None
         self._http_options = http_options if http_options else {}
         self._http_client = AsyncHTTPClient()
 
     def _has_token(self):
-        return self._token.is_valid()
+        return self._token and self._token.is_valid()
 
     @gen.coroutine
     def get_token(self):
@@ -39,19 +39,19 @@ class TokenManager(object):
             yield self._update_token()
         raise gen.Return(self._token.access_token)
 
-    @gen.coroutine
-    def _get_token_data(self):
-        token_data = yield self._request_token()
-        raise gen.Return(token_data)
-
     def reset_token(self):
-        self._token = Token()
+        return self._update_token()
 
     @gen.coroutine
     def _update_token(self):
         token_data = yield self._get_token_data()
         self._token = Token(token_data.get('access_token', ''),
                             token_data.get('expires_in', 0))
+
+    @gen.coroutine
+    def _get_token_data(self):
+        token_data = yield self._request_token()
+        raise gen.Return(token_data)
 
     @gen.coroutine
     def _request_token(self):

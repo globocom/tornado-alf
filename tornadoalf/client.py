@@ -39,14 +39,14 @@ class Client(object):
             if response.code != BAD_TOKEN:
                 raise gen.Return(response)
 
-            self._token_manager.reset_token()
+            yield self._token_manager.reset_token()
             response = yield self._authorized_fetch(request,
                                                     callback,
                                                     **kwargs)
             raise gen.Return(response)
 
         except TokenError:
-            self._token_manager.reset_token()
+            yield self._token_manager.reset_token()
             raise
 
     @gen.coroutine
