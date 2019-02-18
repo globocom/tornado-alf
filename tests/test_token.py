@@ -1,5 +1,8 @@
 #
 # encoding: utf-8
+
+import datetime
+
 from unittest import TestCase
 from mock import MagicMock
 from tornadoalf.token import Token, TokenHTTPError
@@ -19,6 +22,13 @@ class TestToken(TestCase):
     def test_should_know_when_it_is_valid(self):
         token = Token(access_token='access_token', expires_in=10)
         self.assertTrue(token.is_valid())
+
+    def test_expires_on_using_utc(self):
+        token = Token(access_token='access_token', expires_in=10)
+        self.assertTrue(token.expires_on > datetime.datetime.utcnow())
+        self.assertTrue(
+            token.expires_on <
+            datetime.datetime.utcnow() + datetime.timedelta(seconds=15))
 
 
 class TestTokenHTTPError(TestCase):

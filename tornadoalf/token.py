@@ -28,7 +28,8 @@ class Token(object):
         self.access_token = access_token
         self._expires_in = expires_in
 
-        self._expires_on = datetime.now() + timedelta(seconds=self._expires_in)
+        self.expires_on = datetime.utcnow() + timedelta(
+            seconds=self._expires_in)
 
     def is_valid(self):
-        return self._expires_on > datetime.now()
+        return self.expires_on > datetime.utcnow()
