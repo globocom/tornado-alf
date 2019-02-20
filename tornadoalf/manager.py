@@ -40,6 +40,10 @@ class TokenManager(object):
         raise gen.Return(self._token.access_token)
 
     def reset_token(self):
+        logger.info(
+            'Token for client id: %s was expired, requesting another token',
+            self._client_id,
+        )
         return self._update_token()
 
     @gen.coroutine

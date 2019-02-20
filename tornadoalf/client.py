@@ -26,22 +26,38 @@ class Client(object):
             http_options=http_options)
 
     @gen.coroutine
-    def fetch(self, request, callback=None, **kwargs):
+    def fetch(self, request, callback=None, raise_error=True, **kwargs):
+        """Executes a request by AsyncHTTPClient,
+        asynchronously returning an `tornado.HTTPResponse`.
 
+           The ``raise_error=False`` argument currently suppresses
+           *all* errors, encapsulating them in `HTTPResponse` objects
+           following the tornado http-client standard
+        """
         # accepts request as string then convert it to HTTPRequest
         if isinstance(request, str):
             request = HTTPRequest(request, **kwargs)
 
         try:
+            # The first request calls tornado-client ignoring the
+            # possible exception, in case of 401 response,
+            # renews the access token and replay it
             response = yield self._authorized_fetch(request,
                                                     callback,
+                                                    raise_error=False,
                                                     **kwargs)
-            if response.code != BAD_TOKEN:
+
+            if response.code == BAD_TOKEN:
+                yield self._token_manager.reset_token()
+            elif response.error and raise_error:
+                raise response.error
+            else:
                 raise gen.Return(response)
 
-            yield self._token_manager.reset_token()
+            # The request with renewed token
             response = yield self._authorized_fetch(request,
                                                     callback,
+                                                    raise_error=raise_error,
                                                     **kwargs)
             raise gen.Return(response)
 
