@@ -30,7 +30,7 @@ Initialize the client and use it as a AsyncHTTPClient object.
 
     resource_uri = 'http://example.com/resource'
 
-    response = yield client.fetch(HTTPRequest(resource_uri),
+    response = await client.fetch(HTTPRequest(resource_uri),
         method='POST', body='{"name": "alf"}',
         headers={'Content-Type': 'application/json'})
 
@@ -40,7 +40,7 @@ Alternatively one can pass directly a string to the fetch client
 .. code-block:: python
 
     # ...
-    response = yield client.fetch('http://example.com/resource',
+    response = await client.fetch('http://example.com/resource',
         method='POST', body='{"name": "alf"}',
         headers={'Content-Type': 'application/json'})
 
