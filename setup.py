@@ -14,7 +14,7 @@ tests_require = [
 
 setup(
     name='tornado-alf',
-    version='0.5.0-rc1',
+    version='1.0.0',
     description="OAuth Client For Tornado",
     long_description=open('README.rst').read(),
     keywords='oauth client client_credentials tornado',
@@ -41,7 +41,7 @@ setup(
     ),
     include_package_data=True,
     install_requires=[
-        'tornado>=3.0',
+        'tornado>=6.0',
     ],
     extras_require={
         'tests': tests_require,
